@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Video & Audio Analysis Tool</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f6f8fa;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            background: #fff;
+            max-width: 800px;
+            margin: 48px auto;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+            padding: 32px;
+        }
+        h2 {
+            text-align: center;
+            color: #222;
+            margin-bottom: 24px;
+        }
+        .input-section {
+            margin-bottom: 20px;
+        }
+        .input-group {
+            margin-bottom: 18px;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #333;
+        }
+        input[type="text"], input[type="number"], input[type="file"] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+            font-size: 1rem;
+            background: #f9fafb;
+            transition: border 0.2s;
+            box-sizing: border-box;
+        }
+        input[type="text"]:focus, input[type="number"]:focus {
+            border: 1.5px solid #4f8cff;
+            outline: none;
+            background: #fff;
+        }
+        .divider {
+            text-align: center;
+            margin: 20px 0;
+            color: #666;
+            font-weight: 500;
+        }
+        button[type="submit"], .btn-primary {
+            width: 100%;
+            background: #4f8cff;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 14px 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-top: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button[type="submit"]:hover, .btn-primary:hover {
+            background: #2563eb;
+        }
+        .analysis-section {
+            margin-top: 32px;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+        .analysis-section h3 {
+            margin-top: 0;
+            color: #333;
+            font-size: 1.2rem;
+        }
+        .progress-container {
+            margin: 18px 0 8px 0;
+        }
+        .progress {
+            background: #e5e7eb;
+            height: 24px;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+        }
+        .progress-bar {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.5s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .progress-bar.video {
+            background: linear-gradient(90deg, #4f8cff 60%, #2563eb 100%);
+        }
+        .progress-bar.audio {
+            background: linear-gradient(90deg, #22c55e 60%, #15803d 100%);
+        }
+        .status {
+            font-size: 0.95rem;
+            color: #666;
+            margin-bottom: 8px;
+            min-height: 20px;
+        }
+        .step-indicator {
+            margin-top: 12px;
+            padding: 8px 0;
+        }
+        .step {
+            padding: 6px 0;
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+        .step .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+            background: #ccc;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+        .step.active .dot {
+            background: #4f8cff;
+        }
+        .step.done .dot {
+            background: #22c55e;
+        }
+        .step.error .dot {
+            background: #dc2626;
+        }
+        .downloads {
+            margin-top: 24px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
+        .downloads button, .downloads a {
+            background: #22c55e;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 18px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+        .downloads button:hover, .downloads a:hover {
+            background: #15803d;
+        }
+        .downloads h4 {
+            grid-column: 1 / -1;
+            margin: 0 0 12px 0;
+            color: #333;
+        }
+        .error {
+            color: #dc2626;
+            margin-top: 18px;
+            text-align: center;
+            font-weight: 500;
+            padding: 12px;
+            background: #fee2e2;
+            border-radius: 6px;
+        }
+        @media (max-width: 600px) {
+            .container {
+                padding: 18px;
+                margin: 24px 12px;
+            }
+            .downloads {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Video & Audio Analysis Tool</h2>
+        <form id="analyzeForm" autocomplete="off">
+            <div class="input-section">
+                <div class="input-group">
+                    <label for="url">YouTube URL<span style="color:#dc2626">*</span></label>
+                    <input type="text" name="url" id="url" placeholder="e.g. https://www.youtube.com/watch?v=...">
+                </div>
+                <div class="divider">OR</div>
+                <div class="input-group">
+                    <label for="file">Upload Video File</label>
+                    <input type="file" id="file" accept="video/*">
+                </div>
+            </div>
+            <div class="input-group">
+                <label for="start_time">Start Time (seconds)<span style="color:#dc2626">*</span></label>
+                <input type="number" name="start_time" id="start_time" min="0" required placeholder="e.g. 10" value="10">
+            </div>
+            <div class="input-group">
+                <label for="end_time">End Time (seconds)<span style="color:#dc2626">*</span></label>
+                <input type="number" name="end_time" id="end_time" min="0" required placeholder="e.g. 100" value="100">
+            </div>
+            <div class="input-group">
+                <label for="fps">Frames Per Second (FPS)<span style="color:#dc2626">*</span></label>
+                <input type="number" name="fps" id="fps" min="1" required placeholder="e.g. 1" value="1">
+            </div>
+            <button type="submit" class="btn-primary">Start Analysis</button>
+        </form>
+
+        <!-- Video Analysis Section -->
+        <div class="analysis-section" id="videoSection" style="display:none;">
+            <h3>🎥 Video Analysis</h3>
+            <div class="status" id="videoStatus"></div>
+            <div class="progress-container">
+                <div class="progress">
+                    <div class="progress-bar video" id="videoProgressBar" style="width:0%">0%</div>
+                </div>
+            </div>
+            <div class="step-indicator" id="videoSteps"></div>
+        </div>
+
+        <!-- Audio Analysis Section -->
+        <div class="analysis-section" id="audioSection" style="display:none;">
+            <h3>🎤 Audio Analysis</h3>
+            <div class="status" id="audioStatus"></div>
+            <div class="progress-container">
+                <div class="progress">
+                    <div class="progress-bar audio" id="audioProgressBar" style="width:0%">0%</div>
+                </div>
+            </div>
+            <div class="step-indicator" id="audioSteps"></div>
+        </div>
+
+        <div class="downloads" id="downloads"></div>
+        <div class="error" id="error" style="display:none;"></div>
+    </div>
+    <script>
+        const form = document.getElementById('analyzeForm');
+        const videoSection = document.getElementById('videoSection');
+        const audioSection = document.getElementById('audioSection');
+        const videoStatus = document.getElementById('videoStatus');
+        const audioStatus = document.getElementById('audioStatus');
+        const videoProgressBar = document.getElementById('videoProgressBar');
+        const audioProgressBar = document.getElementById('audioProgressBar');
+        const videoSteps = document.getElementById('videoSteps');
+        const audioSteps = document.getElementById('audioSteps');
+        const downloadsDiv = document.getElementById('downloads');
+        const errorDiv = document.getElementById('error');
+        let jobId = null;
+        let pollInterval = null;
+
+        const videoStepLabels = [
+            { key: 'queued', label: 'Queued' },
+            { key: 'downloading', label: 'Downloading Video' },
+            { key: 'extracting_frames', label: 'Extracting Frames' },
+            { key: 'deepface_analysis', label: 'Analyzing Faces' },
+            { key: 'clip_classification', label: 'Classifying Scenes' },
+            { key: 'palette_extraction', label: 'Extracting Palettes' },
+            { key: 'summary', label: 'Creating Summary' },
+            { key: 'done', label: 'Done' }
+        ];
+
+        const audioStepLabels = [
+            { key: 'queued', label: 'Queued' },
+            { key: 'waiting', label: 'Waiting for Video' },
+            { key: 'extracting', label: 'Extracting Audio' },
+            { key: 'transcribing', label: 'Transcribing' },
+            { key: 'analyzing', label: 'Analyzing Sentiment' },
+            { key: 'done', label: 'Done' }
+        ];
+
+        const videoStatusMessages = {
+            queued: 'Waiting to start...',
+            downloading: 'Downloading video...',
+            processing: 'Processing...',
+            extracting_frames: 'Extracting frames...',
+            deepface_analysis: 'Analyzing faces (age, gender, emotion)...',
+            clip_classification: 'Classifying scenes...',
+            palette_extraction: 'Extracting color palettes...',
+            summary: 'Creating summary...',
+            done: '✅ Video analysis complete!',
+            error: '❌ Video analysis error',
+            waiting: 'Waiting for video download...'
+        };
+
+        const audioStatusMessages = {
+            queued: 'Waiting to start...',
+            waiting: 'Waiting for video download...',
+            processing: 'Processing...',
+            extracting: 'Extracting audio...',
+            transcribing: 'Transcribing audio...',
+            analyzing: 'Analyzing sentiment...',
+            done: '✅ Audio analysis complete!',
+            error: '❌ Audio analysis error'
+        };
+
+        function renderSteps(steps, currentStatus, errorStatus) {
+            let found = false;
+            return steps.map(step => {
+                let cls = 'step';
+                if (errorStatus && errorStatus.startsWith('error') && !found) {
+                    cls += ' error';
+                    found = true;
+                } else if (step.key === currentStatus && !found) {
+                    cls += ' active';
+                    found = true;
+                } else if (!found) {
+                    cls += ' done';
+                }
+                return `<div class="${cls}"><span class="dot"></span>${step.label}</div>`;
+            }).join('');
+        }
+
+        form.onsubmit = async function(e) {
+            e.preventDefault();
+            videoSection.style.display = 'block';
+            audioSection.style.display = 'block';
+            videoStatus.textContent = 'Starting...';
+            audioStatus.textContent = 'Waiting...';
+            videoProgressBar.style.width = '0%';
+            videoProgressBar.textContent = '0%';
+            audioProgressBar.style.width = '0%';
+            audioProgressBar.textContent = '0%';
+            downloadsDiv.innerHTML = '';
+            errorDiv.textContent = '';
+            errorDiv.style.display = 'none';
+
+            const fileInput = document.getElementById('file');
+            const urlInput = document.getElementById('url');
+            const startTime = document.getElementById('start_time').value;
+            const endTime = document.getElementById('end_time').value;
+            const fps = document.getElementById('fps').value;
+
+            if (fileInput.files.length > 0) {
+                // Upload local file
+                const formData = new FormData();
+                formData.append('file', fileInput.files[0]);
+                formData.append('start_time', startTime);
+                formData.append('end_time', endTime);
+                formData.append('fps', fps);
+                
+                const res = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await res.json();
+                if (result.job_id) {
+                    jobId = result.job_id;
+                    pollProgress();
+                } else {
+                    errorDiv.textContent = result.error || 'Failed to start job.';
+                    errorDiv.style.display = 'block';
+                }
+            } else if (urlInput.value) {
+                // Use YouTube URL
+                const data = {
+                    url: urlInput.value,
+                    start_time: startTime,
+                    end_time: endTime,
+                    fps: fps
+                };
+                const res = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                if (result.job_id) {
+                    jobId = result.job_id;
+                    pollProgress();
+                } else {
+                    errorDiv.textContent = 'Failed to start job.';
+                    errorDiv.style.display = 'block';
+                }
+            } else {
+                errorDiv.textContent = 'Please enter a YouTube URL or select a video file.';
+                errorDiv.style.display = 'block';
+            }
+        };
+
+        function pollProgress() {
+            pollInterval = setInterval(async () => {
+                const res = await fetch(`/progress/${jobId}`);
+                const data = await res.json();
+
+                // Update video progress
+                if (data.video) {
+                    const videoProgress = Math.round((data.video.progress || 0) * 100);
+                    videoProgressBar.style.width = `${videoProgress}%`;
+                    videoProgressBar.textContent = `${videoProgress}%`;
+                    const videoMsg = videoStatusMessages[data.video.status] || data.video.status;
+                    videoStatus.textContent = videoMsg;
+                    videoSteps.innerHTML = renderSteps(videoStepLabels, data.video.status, data.video.error);
+                    if (data.video.error) {
+                        videoStatus.textContent = `❌ Error: ${data.video.error}`;
+                        videoStatus.style.color = '#dc2626';
+                    }
+                }
+
+                // Update audio progress
+                if (data.audio) {
+                    const audioProgress = Math.round((data.audio.progress || 0) * 100);
+                    audioProgressBar.style.width = `${audioProgress}%`;
+                    audioProgressBar.textContent = `${audioProgress}%`;
+                    const audioMsg = audioStatusMessages[data.audio.status] || data.audio.status;
+                    audioStatus.textContent = audioMsg;
+                    audioSteps.innerHTML = renderSteps(audioStepLabels, data.audio.status, data.audio.error);
+                    if (data.audio.error) {
+                        audioStatus.textContent = `❌ Error: ${data.audio.error}`;
+                        audioStatus.style.color = '#dc2626';
+                    }
+                }
+
+                // Check if both are done
+                if (data.status === 'done') {
+                    clearInterval(pollInterval);
+                    downloadsDiv.innerHTML = `
+                        <h4>Download Results:</h4>
+                        <button onclick="window.location='/download/${jobId}/video'">Download Video</button>
+                        <button onclick="window.location='/download/${jobId}/summary'">Download Video Summary CSV</button>
+                        <button onclick="window.location='/download/${jobId}/frame_analysis'">Download Frame Analysis CSV</button>
+                        <button onclick="window.location='/download/${jobId}/sentiment_csv'">Download Sentiment CSV</button>
+                        <button onclick="window.location='/download/${jobId}/sentiment_json'">Download Sentiment JSON</button>
+                    `;
+                }
+
+                if (data.status === 'error') {
+                    clearInterval(pollInterval);
+                    errorDiv.textContent = data.error || 'Unknown error occurred';
+                    errorDiv.style.display = 'block';
+                }
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
